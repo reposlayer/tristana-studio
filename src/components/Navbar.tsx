@@ -13,7 +13,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    const handleScroll = () => setIsScrolled(window.scrollY > 40);
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -21,87 +21,101 @@ export default function Navbar() {
 
   const links = [
     { href: "/programi", label: "Programi" },
-    { href: "/radionice", label: "Edukacije & Radionice" },
+    { href: "/radionice", label: "Edukacije" },
     { href: "/raspored", label: "Raspored" },
     { href: "/o-nama", label: "O nama" },
     { href: "/kontakt", label: "Kontakt" },
   ];
 
-  // Colors match the new Sakura / elegant aesthetic.
-  const navBg = isScrolled 
-    ? "bg-white/80 backdrop-blur-xl border-b border-[#FFB7C5]/30 text-stone-900 shadow-[0_4px_30px_rgba(255,183,197,0.15)]" 
-    : "bg-transparent text-stone-900 border-transparent";
-    
-  const logoColor = "text-stone-900 hover:text-[#FFB7C5] transition-colors";
-
   return (
-    <nav className={`fixed top-0 w-full z-[100] transition-all duration-700 ease-out ${navBg}`}>
-      <div className="max-w-screen-2xl mx-auto px-6 md:px-12 py-5 md:py-6 flex justify-between items-center">
-        <Magnetic>
-          <Link href="/" className={`text-2xl md:text-3xl font-serif tracking-[0.2em] uppercase origin-left block p-2 ${logoColor}`}>
-            Apolon
-          </Link>
-        </Magnetic>
-        
-        {/* Desktop Links */}
-        <div className="hidden md:flex gap-8 font-sans text-xs tracking-widest uppercase items-center font-medium">
-          {links.map((link) => (
-            <Magnetic key={link.href}>
-              <Link 
-                href={link.href}
-                className={`relative px-4 py-2 group transition-colors block ${pathname === link.href ? "text-[#D87093]" : "text-stone-700 hover:text-stone-900"}`}
-              >
-                {link.label}
-                <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] bg-[#FFB7C5] transition-all duration-500 rounded-full ${pathname === link.href ? "w-1/2 opacity-100" : "w-0 opacity-0 group-hover:w-1/2 group-hover:opacity-100"}`} />
-              </Link>
-            </Magnetic>
-          ))}
-        </div>
-
-        {/* Mobile Toggle */}
-        <button 
-          className="md:hidden p-2 text-stone-900 z-50 mix-blend-difference"
-          onClick={() => setIsMobileMenuOpen(true)}
+    <>
+      <motion.nav 
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
+        className="fixed top-0 w-full z-[100] flex justify-center mt-6 px-4 md:px-0 pointer-events-none"
+      >
+        <div 
+          className={`pointer-events-auto flex justify-between items-center transition-all duration-700 ease-[0.16,1,0.3,1] rounded-full overflow-hidden
+            ${isScrolled 
+              ? "bg-white/40 backdrop-blur-3xl border border-white/60 shadow-[0_8px_40px_rgba(255,183,197,0.2)] px-6 py-3 w-full max-w-4xl" 
+              : "bg-transparent border-transparent px-8 py-5 w-full max-w-7xl"
+            }
+          `}
         >
-          <Menu size={28} />
-        </button>
-      </div>
+          <Magnetic>
+            <Link href="/" className="text-xl md:text-2xl font-serif tracking-[0.25em] uppercase text-stone-900 group">
+              <span className="group-hover:text-[#D87093] transition-colors duration-500">Apolon</span>
+            </Link>
+          </Magnetic>
+          
+          <div className="hidden md:flex gap-8 font-sans text-[10px] tracking-[0.25em] uppercase items-center font-semibold">
+            {links.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Magnetic key={link.href}>
+                  <Link 
+                    href={link.href}
+                    className={`relative px-2 py-2 group transition-all duration-500 flex flex-col items-center
+                      ${isActive ? "text-[#D87093]" : "text-stone-600 hover:text-stone-900"}
+                    `}
+                  >
+                    {link.label}
+                    <span 
+                      className={`absolute -bottom-1 w-1 h-1 rounded-full transition-all duration-500
+                        ${isActive 
+                          ? "bg-[#D87093] opacity-100 scale-100 shadow-[0_0_8px_rgba(216,112,147,0.8)]" 
+                          : "bg-[#FFB7C5] opacity-0 scale-0 group-hover:scale-100 group-hover:opacity-100"
+                        }
+                      `} 
+                    />
+                  </Link>
+                </Magnetic>
+              );
+            })}
+          </div>
 
-      {/* Mobile Menu */}
+          <button 
+            className="md:hidden p-2 text-stone-900 transition-transform active:scale-95 z-50 pointer-events-auto"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu size={24} strokeWidth={1.5} />
+          </button>
+        </div>
+      </motion.nav>
+
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div 
-            initial={{ opacity: 0, y: "-100%", borderRadius: "0 0 100% 100%" }}
-            animate={{ opacity: 1, y: 0, borderRadius: "0" }}
-            exit={{ opacity: 0, y: "-100%", borderRadius: "0 0 100% 100%" }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 min-h-screen bg-white text-stone-900 z-[200] flex flex-col pt-24 px-8 overflow-hidden"
+            initial={{ opacity: 0, clipPath: "circle(0% at 100% 0)" }}
+            animate={{ opacity: 1, clipPath: "circle(150% at 100% 0)" }}
+            exit={{ opacity: 0, clipPath: "circle(0% at 100% 0)" }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 min-h-screen bg-white/90 backdrop-blur-3xl z-[200] flex flex-col pt-24 px-8 overflow-hidden pointer-events-auto"
           >
-            {/* Elegant Background Glow */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFB7C5]/30 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute top-1/4 -right-1/4 w-[600px] h-[600px] bg-[#FFB7C5]/30 blur-[100px] rounded-full pointer-events-none" />
             
             <button 
-              className="absolute top-6 right-6 p-4 text-stone-400 hover:text-stone-900 transition-colors"
+              className="absolute top-8 right-8 p-4 text-stone-500 hover:text-stone-900 transition-colors z-[210]"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <X size={32} />
+              <X size={32} strokeWidth={1} />
             </button>
-            <div className="flex flex-col gap-8 text-3xl font-serif tracking-widest mt-12 relative z-10">
+            <div className="flex flex-col gap-8 text-4xl font-serif tracking-widest mt-16 relative z-10">
               {links.map((link, idx) => (
                 <motion.div
                   key={link.href}
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 + idx * 0.1 }}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 + idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
                 >
                   <Link 
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="inline-block hover:text-[#D87093] transition-colors relative group"
                   >
-                    {link.label}
-                    {/* Hover line */}
-                    <span className="absolute -bottom-2 left-0 w-0 h-[2px] bg-[#FFB7C5] group-hover:w-full transition-all duration-500 rounded-full" />
+                    <span className="font-sans text-sm text-[#FFB7C5] absolute -left-8 top-2 opacity-50">0{idx + 1}</span>
+                    <span className="">{link.label}</span>
                   </Link>
                 </motion.div>
               ))}
@@ -109,6 +123,6 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 }
