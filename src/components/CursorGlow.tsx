@@ -44,8 +44,8 @@ export default function CursorGlow() {
     const handleMouseDown = () => setIsClicking(true);
     const handleMouseUp = () => setIsClicking(false);
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseover", handleMouseOver);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("mouseover", handleMouseOver, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
     document.addEventListener("mousedown", handleMouseDown);
@@ -67,28 +67,32 @@ export default function CursorGlow() {
     };
   }, [isVisible, mouseX, mouseY]);
 
+  // Opt-out easily on SSR
   if (typeof window !== "undefined" && window.innerWidth < 768) return null;
 
   return (
     <>
+      {/* 
+        OPTIMIZATION: Removed heavy CSS 'filter: blur()' that recalculates every frame on movement.
+        Using purely a smooth radial gradient to achieve the exact same soft ambient glow with minimal GPU cost 
+      */}
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[10] rounded-full mix-blend-multiply"
+        className="fixed top-0 left-0 pointer-events-none z-[10] rounded-full mix-blend-multiply will-change-transform"
         style={{
-          width: "700px",
-          height: "700px",
+          width: "800px",
+          height: "800px",
           x: ambientX,
           y: ambientY,
           translateX: "-50%",
           translateY: "-50%",
-          background: "radial-gradient(circle, rgba(230, 200, 205, 0.15) 0%, rgba(245, 220, 225, 0.05) 40%, transparent 70%)",
-          filter: "blur(50px)",
+          background: "radial-gradient(circle, rgba(230, 200, 205, 0.18) 0%, rgba(245, 220, 225, 0.08) 25%, transparent 60%)",
           opacity: isVisible ? 1 : 0,
           transition: "opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
       />
       
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9998] rounded-full mix-blend-difference bg-white"
+        className="fixed top-0 left-0 pointer-events-none z-[9998] rounded-full mix-blend-difference bg-white will-change-transform"
         style={{
           x: midX,
           y: midY,
@@ -96,15 +100,15 @@ export default function CursorGlow() {
           translateY: "-50%",
         }}
         animate={{
-          width: isHovering ? "100px" : (isClicking ? "40px" : "16px"),
-          height: isHovering ? "100px" : (isClicking ? "40px" : "16px"),
+          width: isHovering ? "90px" : (isClicking ? "36px" : "14px"),
+          height: isHovering ? "90px" : (isClicking ? "36px" : "14px"),
           opacity: isVisible ? 1 : 0,
         }}
         transition={{ type: "spring", stiffness: 300, damping: isHovering ? 25 : 20 }}
       />
 
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9999] rounded-full bg-[#FFB7C5] shadow-[0_0_20px_rgba(255,183,197,0.8)]"
+        className="fixed top-0 left-0 pointer-events-none z-[9999] rounded-full bg-[#FFB7C5] shadow-[0_0_15px_rgba(255,183,197,1)] will-change-transform"
         style={{
           width: "6px",
           height: "6px",
