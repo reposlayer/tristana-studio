@@ -2,6 +2,19 @@
 
 import { useEffect, useRef } from "react";
 
+interface Particle {
+  x: number;
+  y: number;
+  size: number;
+  angle: number;
+  rotSpeed: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  alpha: number;
+}
+
 export default function InteractiveCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -14,19 +27,54 @@ export default function InteractiveCanvas() {
 
     let width = window.innerWidth;
     let height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = width * window.devicePixelRatio;
+    canvas.height = height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
 
-    let mouse = { x: width / 2, y: height / 2, vx: 0, vy: 0 };
-    let points: { x: number; y: number; age: number }[] = [];
+    let particles: Particle[] = [];
+    let mouse = { x: -1000, y: -1000 };
+    let lastMouse = { x: -1000, y: -1000 };
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouse.vx = e.clientX - mouse.x;
-      mouse.vy = e.clientY - mouse.y;
+      lastMouse.x = mouse.x;
+      lastMouse.y = mouse.y;
       mouse.x = e.clientX;
       mouse.y = e.clientY;
 
-      points.push({ x: mouse.x, y: mouse.y, age: 0 });
+      const dx = mouse.x - lastMouse.x;
+      const dy = mouse.y - lastMouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (lastMouse.x === -1000) {
+         lastMouse.x = mouse.x;
+         lastMouse.y = mouse.y;
+         return;
+      }
+
+      const spawnCount = Math.min(Math.floor(dist / 5) + 1, 8); // Spawn density
+      for (let i = 0; i < spawnCount; i++) {
+        const interpX = lastMouse.x + (dx * (i / spawnCount));
+        const interpY = lastMouse.y + (dy * (i / spawnCount));
+        
+        const scatterRange = 25;
+        const scatterX = (Math.random() - 0.5) * scatterRange;
+        const scatterY = (Math.random() - 0.5) * scatterRange;
+
+        particles.push({
+          x: interpX + scatterX,
+          y: interpY + scatterY,
+          size: Math.random() * 6 + 3, 
+          angle: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.05,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4 - 0.5, // float up subtly
+          life: 0,
+          maxLife: Math.random() * 40 + 50, 
+          alpha: Math.random() * 0.6 + 0.4 
+        });
+      }
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -34,8 +82,11 @@ export default function InteractiveCanvas() {
     const handleResize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
     };
     window.addEventListener("resize", handleResize);
 
@@ -43,38 +94,59 @@ export default function InteractiveCanvas() {
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
-      
-      // Update points
-      for (let i = 0; i < points.length; i++) {
-        points[i].age += 1;
-      }
-      // Remove old points
-      points = points.filter((p) => p.age < 50);
 
-      // Draw elegant spline through points
-      if (points.length > 2) {
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        
-        for (let i = 1; i < points.length - 2; i++) {
-          const xc = (points[i].x + points[i + 1].x) / 2;
-          const yc = (points[i].y + points[i + 1].y) / 2;
-          ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life++;
+
+        if (p.life >= p.maxLife) {
+          particles.splice(i, 1);
+          continue;
         }
-        
-        ctx.quadraticCurveTo(
-          points[points.length - 2].x,
-          points[points.length - 2].y,
-          points[points.length - 1].x,
-          points[points.length - 1].y
-        );
 
-        ctx.strokeStyle = "rgba(141, 126, 107, 0.15)"; // brand-500 equivalent very subtle
-        ctx.lineWidth = 120;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.filter = "blur(30px)";
-        ctx.stroke();
+        p.x += p.vx;
+        p.y += p.vy;
+        p.angle += p.rotSpeed;
+
+        const lifePercent = p.life / p.maxLife;
+        // Fade in quick, fade out slow
+        const currentAlpha = Math.sin(lifePercent * Math.PI) * p.alpha;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        
+        // Draw 4-point sparkle
+        ctx.beginPath();
+        const spike = p.size;
+        const inner = p.size * 0.2;
+        
+        ctx.moveTo(0, -spike);
+        ctx.quadraticCurveTo(inner, -inner, spike, 0);
+        ctx.quadraticCurveTo(inner, inner, 0, spike);
+        ctx.quadraticCurveTo(-inner, inner, -spike, 0);
+        ctx.quadraticCurveTo(-inner, -inner, 0, -spike);
+        ctx.closePath();
+        
+        // Luxurious gold/champagne color
+        // On white backgrounds it looks like a soft gold star, on dark backgrounds it shines
+        ctx.fillStyle = `rgba(189, 169, 137, ${currentAlpha})`;
+        ctx.shadowColor = `rgba(189, 169, 137, ${currentAlpha * 0.8})`;
+        ctx.shadowBlur = p.size * 1.5;
+        ctx.fill();
+        
+        // Inner hot core
+        ctx.beginPath();
+        ctx.moveTo(0, -spike * 0.4);
+        ctx.quadraticCurveTo(inner * 0.4, -inner * 0.4, spike * 0.4, 0);
+        ctx.quadraticCurveTo(inner * 0.4, inner * 0.4, 0, spike * 0.4);
+        ctx.quadraticCurveTo(-inner * 0.4, inner * 0.4, -spike * 0.4, 0);
+        ctx.quadraticCurveTo(-inner * 0.4, -inner * 0.4, 0, -spike * 0.4);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(255, 250, 240, ${currentAlpha})`;
+        ctx.fill();
+
+        ctx.restore();
       }
 
       animationFrameId = requestAnimationFrame(render);
@@ -92,8 +164,11 @@ export default function InteractiveCanvas() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[1] mix-blend-multiply opacity-60"
-      style={{ width: "100vw", height: "100vh" }}
+      className="fixed inset-0 pointer-events-none z-[9999]"
+      style={{ 
+        width: "100vw", 
+        height: "100vh" 
+      }}
     />
   );
 }
