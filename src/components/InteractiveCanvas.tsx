@@ -53,7 +53,8 @@ export default function InteractiveCanvas() {
          return;
       }
 
-      const spawnCount = Math.min(Math.floor(dist / 5) + 1, 8); // Spawn density
+      // Smooth interpolation for particle spawning
+      const spawnCount = Math.min(Math.floor(dist / 5) + 1, 8);
       for (let i = 0; i < spawnCount; i++) {
         const interpX = lastMouse.x + (dx * (i / spawnCount));
         const interpY = lastMouse.y + (dy * (i / spawnCount));
@@ -69,7 +70,7 @@ export default function InteractiveCanvas() {
           angle: Math.random() * Math.PI * 2,
           rotSpeed: (Math.random() - 0.5) * 0.05,
           vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.4 - 0.5, // float up subtly
+          vy: (Math.random() - 0.5) * 0.4 - 0.5,
           life: 0,
           maxLife: Math.random() * 40 + 50, 
           alpha: Math.random() * 0.6 + 0.4 
@@ -109,14 +110,13 @@ export default function InteractiveCanvas() {
         p.angle += p.rotSpeed;
 
         const lifePercent = p.life / p.maxLife;
-        // Fade in quick, fade out slow
         const currentAlpha = Math.sin(lifePercent * Math.PI) * p.alpha;
 
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.angle);
         
-        // Draw 4-point sparkle
+        // Draw 4-point sparkle structure
         ctx.beginPath();
         const spike = p.size;
         const inner = p.size * 0.2;
@@ -128,14 +128,13 @@ export default function InteractiveCanvas() {
         ctx.quadraticCurveTo(-inner, -inner, 0, -spike);
         ctx.closePath();
         
-        // Luxurious gold/champagne color
-        // On white backgrounds it looks like a soft gold star, on dark backgrounds it shines
+        // Gold / Champagne tones
         ctx.fillStyle = `rgba(189, 169, 137, ${currentAlpha})`;
         ctx.shadowColor = `rgba(189, 169, 137, ${currentAlpha * 0.8})`;
         ctx.shadowBlur = p.size * 1.5;
         ctx.fill();
         
-        // Inner hot core
+        // White core
         ctx.beginPath();
         ctx.moveTo(0, -spike * 0.4);
         ctx.quadraticCurveTo(inner * 0.4, -inner * 0.4, spike * 0.4, 0);
@@ -165,10 +164,7 @@ export default function InteractiveCanvas() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-[9999]"
-      style={{ 
-        width: "100vw", 
-        height: "100vh" 
-      }}
+      style={{ width: "100vw", height: "100vh" }}
     />
   );
 }
