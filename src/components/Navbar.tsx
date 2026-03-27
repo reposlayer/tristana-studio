@@ -14,7 +14,8 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -26,29 +27,32 @@ export default function Navbar() {
     { href: "/kontakt", label: "Kontakt" },
   ];
 
-  const isHome = pathname === "/";
-  const navBg = isScrolled || !isHome ? "bg-stone-50/95 backdrop-blur-md border-b border-stone-200 text-stone-900 shadow-sm" : "bg-transparent text-stone-50 border-transparent";
-  const logoColor = isScrolled || !isHome ? "text-brand-900" : "text-stone-50";
+  // Colors match the new Sakura / elegant aesthetic.
+  const navBg = isScrolled 
+    ? "bg-white/80 backdrop-blur-xl border-b border-[#FFB7C5]/30 text-stone-900 shadow-[0_4px_30px_rgba(255,183,197,0.15)]" 
+    : "bg-transparent text-stone-900 border-transparent";
+    
+  const logoColor = "text-stone-900 hover:text-[#FFB7C5] transition-colors";
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out ${navBg}`}>
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 md:py-6 flex justify-between items-center">
+    <nav className={`fixed top-0 w-full z-[100] transition-all duration-700 ease-out ${navBg}`}>
+      <div className="max-w-screen-2xl mx-auto px-6 md:px-12 py-5 md:py-6 flex justify-between items-center">
         <Magnetic>
-          <Link href="/" className={`text-2xl font-serif tracking-[0.2em] uppercase origin-left transition-colors duration-500 block p-2 ${logoColor}`}>
+          <Link href="/" className={`text-2xl md:text-3xl font-serif tracking-[0.2em] uppercase origin-left block p-2 ${logoColor}`}>
             Apolon
           </Link>
         </Magnetic>
         
         {/* Desktop Links */}
-        <div className="hidden md:flex gap-6 font-sans text-xs tracking-widest uppercase items-center font-medium">
+        <div className="hidden md:flex gap-8 font-sans text-xs tracking-widest uppercase items-center font-medium">
           {links.map((link) => (
             <Magnetic key={link.href}>
               <Link 
                 href={link.href}
-                className={`relative px-4 py-2 group transition-colors block ${pathname === link.href ? "text-brand-700" : ""}`}
+                className={`relative px-4 py-2 group transition-colors block ${pathname === link.href ? "text-[#D87093]" : "text-stone-700 hover:text-stone-900"}`}
               >
                 {link.label}
-                <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-0.5 bg-brand-500 transition-all duration-300 ${pathname === link.href ? "w-1/2 opacity-100" : "w-0 opacity-0 group-hover:w-1/2 group-hover:opacity-100"}`} />
+                <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] bg-[#FFB7C5] transition-all duration-500 rounded-full ${pathname === link.href ? "w-1/2 opacity-100" : "w-0 opacity-0 group-hover:w-1/2 group-hover:opacity-100"}`} />
               </Link>
             </Magnetic>
           ))}
@@ -56,10 +60,10 @@ export default function Navbar() {
 
         {/* Mobile Toggle */}
         <button 
-          className="md:hidden p-2"
+          className="md:hidden p-2 text-stone-900 z-50 mix-blend-difference"
           onClick={() => setIsMobileMenuOpen(true)}
         >
-          <Menu size={24} />
+          <Menu size={28} />
         </button>
       </div>
 
@@ -70,13 +74,14 @@ export default function Navbar() {
             initial={{ opacity: 0, y: "-100%", borderRadius: "0 0 100% 100%" }}
             animate={{ opacity: 1, y: 0, borderRadius: "0" }}
             exit={{ opacity: 0, y: "-100%", borderRadius: "0 0 100% 100%" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 min-h-screen bg-stone-900 text-stone-50 z-50 flex flex-col pt-24 px-8 overflow-hidden"
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 min-h-screen bg-white text-stone-900 z-[200] flex flex-col pt-24 px-8 overflow-hidden"
           >
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-500/10 blur-[120px] rounded-full pointer-events-none" />
+            {/* Elegant Background Glow */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFB7C5]/30 blur-[120px] rounded-full pointer-events-none" />
             
             <button 
-              className="absolute top-6 right-6 p-2 text-stone-400 hover:text-white"
+              className="absolute top-6 right-6 p-4 text-stone-400 hover:text-stone-900 transition-colors"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <X size={32} />
@@ -92,10 +97,11 @@ export default function Navbar() {
                   <Link 
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="inline-block hover:text-brand-400 transition-colors relative group"
+                    className="inline-block hover:text-[#D87093] transition-colors relative group"
                   >
                     {link.label}
-                    <span className="absolute -bottom-2 left-0 w-0 h-px bg-brand-400 group-hover:w-full transition-all duration-500" />
+                    {/* Hover line */}
+                    <span className="absolute -bottom-2 left-0 w-0 h-[2px] bg-[#FFB7C5] group-hover:w-full transition-all duration-500 rounded-full" />
                   </Link>
                 </motion.div>
               ))}
