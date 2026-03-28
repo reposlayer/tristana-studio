@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, Variants } from "framer-motion";
 import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,7 +19,7 @@ export default function HeroParallax() {
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   // Framer Motion Variants for ultra-smooth staggering
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -27,7 +27,7 @@ export default function HeroParallax() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 100, rotate: 2 },
     visible: { 
       opacity: 1, 
